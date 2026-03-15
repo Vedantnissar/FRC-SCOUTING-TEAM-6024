@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FRC Scout</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f4;
+    --bg3: #eeece8;
+    --text: #1a1a18;
+    --text2: #6b6b67;
+    --text3: #9c9c97;
+    --border: rgba(0,0,0,0.12);
+    --border2: rgba(0,0,0,0.22);
+    --accent: #185FA5;
+    --accent-bg: #E6F1FB;
+    --accent-text: #185FA5;
+    --r-md: 8px;
+    --r-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a;
+      --bg2: #252522;
+      --bg3: #2e2e2b;
+      --text: #f0ede8;
+      --text2: #a0a09a;
+      --text3: #6a6a65;
+      --border: rgba(255,255,255,0.10);
+      --border2: rgba(255,255,255,0.20);
+      --accent: #378ADD;
+      --accent-bg: #0c2440;
+      --accent-text: #85B7EB;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; }
+  .app { max-width: 960px; margin: 0 auto; padding: 1rem; }
+
+  /* Header */
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; padding: 12px 16px; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--r-lg); }
+  .header-title { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+  .header-room { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
+  .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); flex-shrink: 0; }
+  .sync-dot.on { background: #3B6D11; }
+  .sync-dot.pulse { background: #BA7517; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.3} }
+
+  /* Nav */
+  .nav { display: flex; gap: 3px; background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--r-lg); padding: 4px; margin-bottom: 1.25rem; overflow-x: auto; }
+  .nav-btn { flex: 1; min-width: 70px; padding: 7px 4px; border: none; background: transparent; border-radius: var(--r-md); cursor: pointer; font-size: 12px; color: var(--text2); transition: all .15s; font-family: inherit; white-space: nowrap; }
+  .nav-btn.active { background: var(--bg); color: var(--text); font-weight: 500; border: 0.5px solid var(--border); }
+
+  /* Cards */
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--r-lg); padding: 1.25rem; margin-bottom: 1rem; }
+  .card-title { font-size: 15px; font-weight: 600; margin-bottom: 1.25rem; }
+  .sec { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .07em; margin: 1.25rem 0 8px; }
+  .sec:first-child { margin-top: 0; }
+
+  /* Form */
+  .fg { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+  .fg3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; }
+  .fc { display: flex; flex-direction: column; gap: 4px; }
+  .fc label { font-size: 12px; color: var(--text2); }
+  input[type=text], input[type=number], input[type=time], select, textarea {
+    width: 100%; padding: 8px 10px; border: 0.5px solid var(--border2); border-radius: var(--r-md);
+    background: var(--bg); color: var(--text); font-size: 13px; font-family: inherit;
+  }
+  textarea { resize: vertical; min-height: 64px; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+
+  /* Toggle group */
+  .tg { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; }
+  .tb { padding: 5px 12px; border: 0.5px solid var(--border2); border-radius: var(--r-md); background: transparent; cursor: pointer; font-size: 12px; color: var(--text2); transition: all .1s; font-family: inherit; white-space: nowrap; }
+  .tb.sel { background: var(--accent); border-color: var(--accent); color: #E6F1FB; }
+
+  /* Buttons */
+  .btn-primary { padding: 10px; border: none; border-radius: var(--r-md); background: var(--accent); color: #E6F1FB; font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit; transition: opacity .15s; width: 100%; margin-top: 1.25rem; }
+  .btn-primary:hover { opacity: .85; }
+  .btn-secondary { padding: 7px 14px; border: 0.5px solid var(--border2); border-radius: var(--r-md); background: var(--bg2); cursor: pointer; font-size: 13px; font-family: inherit; color: var(--text); white-space: nowrap; }
+  .pill-btn { padding: 5px 12px; border: 0.5px solid var(--border); border-radius: var(--r-md); background: transparent; cursor: pointer; font-size: 12px; font-family: inherit; color: var(--text2); }
+  .pill-btn:hover { background: var(--bg2); }
+
+  /* Stat cards */
+  .stat-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; margin-bottom: 1rem; }
+  .stat-card { background: var(--bg2); border-radius: var(--r-md); padding: 12px; }
+  .stat-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+  .stat-val { font-size: 20px; font-weight: 600; }
+
+  /* Badges */
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; margin: 2px; }
+  .bb { background: #E6F1FB; color: #185FA5; }
+  .bg { background: #EAF3DE; color: #3B6D11; }
+  .ba { background: #FAEEDA; color: #854F0B; }
+  .br { background: #FCEBEB; color: #A32D2D; }
+  .bp { background: #EEEDFE; color: #534AB7; }
+  @media (prefers-color-scheme: dark) {
+    .bb{background:#0c2440;color:#85B7EB} .bg{background:#172504;color:#97C459} .ba{background:#2a1a03;color:#EF9F27} .br{background:#280a0a;color:#F09595} .bp{background:#1a1130;color:#AFA9EC}
+  }
+
+  /* Rows */
+  .row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; gap: 8px; flex-wrap: wrap; }
+  .row:last-child { border-bottom: none; }
+  .del-btn { border: none; background: none; cursor: pointer; color: var(--text3); font-size: 18px; line-height: 1; padding: 0 4px; }
+
+  /* Position buttons */
+  .pos-btn { width: 70px; height: 46px; border: 0.5px solid var(--border2); border-radius: var(--r-md); background: var(--bg2); cursor: pointer; font-size: 12px; color: var(--text2); font-family: inherit; display: flex; align-items: center; justify-content: center; transition: all .1s; }
+  .pos-btn.sel { background: var(--accent); border-color: var(--accent); color: #E6F1FB; font-weight: 500; }
+
+  /* Schedule */
+  .sched-match { border: 0.5px solid var(--border); border-radius: var(--r-lg); padding: 1rem; margin-bottom: 10px; }
+  .sched-match.next-up { border-color: var(--accent); background: var(--accent-bg); }
+  .sched-match.completed { opacity: .5; }
+  .team-chip { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; transition: opacity .1s; display: inline-block; margin: 2px; }
+  .team-chip:hover { opacity: .75; }
+  .team-chip.red { background: #FCEBEB; color: #A32D2D; }
+  .team-chip.blue { background: #E6F1FB; color: #185FA5; }
+  .team-chip.us { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-color-scheme: dark) {
+    .team-chip.red{background:#280a0a;color:#F09595} .team-chip.blue{background:#0c2440;color:#85B7EB}
+  }
+
+  /* Next match banner */
+  .next-banner { background: var(--accent); color: #E6F1FB; border-radius: var(--r-lg); padding: 1rem 1.25rem; margin-bottom: 1rem; }
+  .next-banner .sub { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; opacity: .7; margin-bottom: 6px; }
+  .next-banner .title { font-size: 18px; font-weight: 600; margin-bottom: 10px; }
+  .next-banner .alliances { display: flex; gap: 20px; flex-wrap: wrap; }
+  .next-banner .al-label { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; opacity: .7; margin-bottom: 4px; }
+
+  /* Alarm */
+  .alarm-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
+  .alarm-row:last-child { border-bottom: none; }
+
+  /* Award item */
+  .award-item { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
+  .award-item:last-child { border-bottom: none; }
+
+  /* Toast */
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); padding: 9px 22px; border-radius: var(--r-md); font-size: 13px; font-weight: 500; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 9999; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+  #toast.show { opacity: 1; }
+  #toast.ok { background: var(--accent); color: #E6F1FB; }
+  #toast.err { background: #A32D2D; color: #FCEBEB; }
+  #toast.sync { background: #3B6D11; color: #EAF3DE; }
+  #toast.alarm { background: #854F0B; color: #FAEEDA; }
+
+  /* Tab */
+  .tab { display: none; } .tab.active { display: block; }
+
+  /* Room screen */
+  #room-screen { max-width: 460px; margin: 10vh auto 0; }
+  .room-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--r-lg); padding: 2rem; }
+  .room-card h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .room-card p { font-size: 13px; color: var(--text2); margin-bottom: 1.5rem; line-height: 1.6; }
+
+  /* Preview card */
+  .preview-card { background: var(--bg2); border-radius: var(--r-md); padding: 10px; margin-bottom: 6px; font-size: 13px; }
+
+  /* Search */
+  .search-row { display: flex; gap: 8px; margin-bottom: 1.5rem; }
+  .search-row input { flex: 1; font-size: 15px; }
+  .search-btn { padding: 8px 20px; border: none; border-radius: var(--r-md); background: var(--accent); color: #E6F1FB; font-size: 14px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+
+  /* Responsive */
+  @media (max-width: 520px) {
+    .fg { grid-template-columns: 1fr; }
+    .fg3 { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .stat-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .app { padding: .75rem; }
+  }
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- ROOM SCREEN -->
+<div id="room-screen" style="display:block">
+  <div class="room-card">
+    <h1>FRC Scout</h1>
+    <p>Enter your name and a shared room code. Every scout on your team uses the same code — all data syncs live across devices.</p>
+    <div class="fc" style="margin-bottom:10px">
+      <label>Your name</label>
+      <input type="text" id="scout-name" placeholder="e.g. Vedu" maxlength="20">
+    </div>
+    <div class="fc" style="margin-bottom:16px">
+      <label>Room code</label>
+      <input type="text" id="room-code-input" placeholder="e.g. FRC5619" maxlength="16"
+        oninput="this.value=this.value.toUpperCase()"
+        onkeydown="if(event.key==='Enter')joinRoom()"
+        style="text-transform:uppercase;letter-spacing:.05em">
+    </div>
+    <button onclick="joinRoom()" class="btn-primary" style="margin-top:0">Join room →</button>
+    <div style="font-size:12px;color:var(--text3);text-align:center;margin-top:14px">Anyone with your room code can view and add entries.</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="main-app" style="display:none">
+<div class="app">
+
+  <div class="header">
+    <div class="header-title">FRC Scout</div>
+    <div class="header-room">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-info">Not connected</span>
+      <button class="pill-btn" onclick="pullData(false)">↓ Pull</button>
+      <button class="pill-btn" onclick="leaveRoom()">Leave</button>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn active" onclick="showTab('sched',this)">Schedule</button>
+    <button class="nav-btn" onclick="showTab('pre',this)">Pre-Match</button>
+    <button class="nav-btn" onclick="showTab('match',this)">Match Scout</button>
+    <button class="nav-btn" onclick="showTab('lookup',this)">Lookup</button>
+    <button class="nav-btn" onclick="showTab('dash',this)">Dashboard</button>
+  </div>
+
+  <!-- ═══ SCHEDULE ═══ -->
+  <div class="tab active" id="tab-sched">
+    <div id="next-banner-wrap"></div>
+
+    <div class="card">
+      <div class="card-title">Match schedule</div>
+      <div class="sec">Your team</div>
+      <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:1rem">
+        <div class="fc" style="max-width:200px">
+          <label>Team number</label>
+          <input type="number" id="my-team" placeholder="e.g. 5619">
+        </div>
+        <button class="btn-secondary" onclick="setMyTeam()">Set</button>
+        <span id="my-team-label" style="font-size:13px;color:var(--text2)"></span>
+      </div>
+
+      <div class="sec">Add match</div>
+      <div class="fg3" style="margin-bottom:10px">
+        <div class="fc"><label>Match #</label><input type="number" id="sch-num" placeholder="e.g. 12"></div>
+        <div class="fc"><label>Start time</label><input type="time" id="sch-time"></div>
+        <div class="fc"><label>Status</label>
+          <select id="sch-status"><option value="upcoming">Upcoming</option><option value="completed">Completed</option></select>
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:12px">
+        <div class="fc"><label>Red alliance (comma-separated)</label><input type="text" id="sch-red" placeholder="254, 1678, 5619"></div>
+        <div class="fc"><label>Blue alliance (comma-separated)</label><input type="text" id="sch-blue" placeholder="118, 971, 2056"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-secondary" onclick="addSchedMatch()">+ Add match</button>
+        <button class="btn-secondary" onclick="saveSchedule()" style="background:var(--accent);color:#E6F1FB;border-color:var(--accent)">Save & sync schedule</button>
+      </div>
+    </div>
+
+    <div id="sched-list"></div>
+
+    <div class="card">
+      <div class="card-title">Match alarms</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:1rem;line-height:1.5">Get a browser notification before your match. Allow notifications when prompted.</div>
+      <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:1rem">
+        <div class="fc"><label>Match #</label><input type="number" id="al-match" placeholder="Match #" style="width:100px"></div>
+        <div class="fc"><label>Alert before</label>
+          <div class="tg" id="al-mins">
+            <button class="tb" onclick="excl('al-mins',this)">2 min</button>
+            <button class="tb" onclick="excl('al-mins',this)">5 min</button>
+            <button class="tb sel" onclick="excl('al-mins',this)">10 min</button>
+            <button class="tb" onclick="excl('al-mins',this)">15 min</button>
+          </div>
+        </div>
+        <button class="btn-secondary" onclick="addAlarm()">+ Set alarm</button>
+      </div>
+      <div id="alarm-list"><div style="font-size:12px;color:var(--text3)">No alarms set</div></div>
+    </div>
+  </div>
+
+  <!-- ═══ PRE-MATCH ═══ -->
+  <div class="tab" id="tab-pre">
+    <div class="card">
+      <div class="card-title">Pre-match team report</div>
+      <div class="sec">Team info</div>
+      <div class="fg">
+        <div class="fc"><label>Team number</label><input type="number" id="pr-num" placeholder="e.g. 254"></div>
+        <div class="fc"><label>Team name</label><input type="text" id="pr-name" placeholder="e.g. The Cheesy Poofs"></div>
+        <div class="fc"><label>Rookie year</label><input type="number" id="pr-rookie" placeholder="e.g. 1999"></div>
+        <div class="fc"><label>Region / district</label><input type="text" id="pr-region" placeholder="e.g. PCH, FMA, ONT"></div>
+      </div>
+      <div class="sec">Championship history</div>
+      <div class="fg">
+        <div class="fc"><label>Qualified to Champs?</label>
+          <div class="tg" id="pr-champs">
+            <button class="tb" onclick="excl('pr-champs',this)">Yes</button>
+            <button class="tb" onclick="excl('pr-champs',this)">No</button>
+            <button class="tb" onclick="excl('pr-champs',this)">Unknown</button>
+          </div>
+        </div>
+        <div class="fc"><label>Won at Champs?</label>
+          <div class="tg" id="pr-champwin">
+            <button class="tb" onclick="excl('pr-champwin',this)">Yes</button>
+            <button class="tb" onclick="excl('pr-champwin',this)">No</button>
+            <button class="tb" onclick="excl('pr-champwin',this)">Unknown</button>
+          </div>
+        </div>
+      </div>
+      <div class="sec">Awards (past 3 years)</div>
+      <div id="awards-list"><div style="font-size:12px;color:var(--text3);padding:4px 0">No awards added</div></div>
+      <div style="display:flex;gap:8px;align-items:flex-end;margin-top:8px">
+        <div class="fc" style="flex:1"><label>Award name</label><input type="text" id="aw-name" placeholder="e.g. Chairman's Award"></div>
+        <div class="fc" style="flex:1"><label>Year & event</label><input type="text" id="aw-event" placeholder="e.g. 2024 Detroit Champs"></div>
+        <button class="btn-secondary" onclick="addAward()" style="height:36px">+ Add</button>
+      </div>
+      <div class="sec" style="margin-top:1.25rem">Impact / threat level</div>
+      <div class="tg" id="pr-impact">
+        <button class="tb" onclick="excl('pr-impact',this)" style="background:#EAF3DE;border-color:#3B6D11;color:#3B6D11">Low</button>
+        <button class="tb" onclick="excl('pr-impact',this)">Medium</button>
+        <button class="tb" onclick="excl('pr-impact',this)">High</button>
+        <button class="tb" onclick="excl('pr-impact',this)" style="background:#FCEBEB;border-color:#A32D2D;color:#A32D2D">Powerhouse</button>
+      </div>
+      <div class="sec">Notes</div>
+      <textarea id="pr-notes" placeholder="TBA observations, past footage notes, weaknesses, alliance potential..."></textarea>
+      <button class="btn-primary" onclick="savePreMatch()">Save & sync pre-match report</button>
+    </div>
+  </div>
+
+  <!-- ═══ MATCH SCOUT ═══ -->
+  <div class="tab" id="tab-match">
+    <div class="card">
+      <div class="card-title">Match scouting</div>
+      <div class="sec">Match info</div>
+      <div class="fg3">
+        <div class="fc"><label>Team #</label><input type="number" id="ms-team" placeholder="Team"></div>
+        <div class="fc"><label>Match #</label><input type="number" id="ms-match" value="1" placeholder="Match"></div>
+        <div class="fc"><label>Alliance</label>
+          <select id="ms-alliance"><option value="red">Red</option><option value="blue">Blue</option></select>
+        </div>
+      </div>
+      <div class="sec">Auto period</div>
+      <div class="fc" style="margin-bottom:10px">
+        <label>Starting position</label>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button class="pos-btn" id="pos-left" onclick="setPos('left')">Left</button>
+          <button class="pos-btn" id="pos-center" onclick="setPos('center')">Center</button>
+          <button class="pos-btn" id="pos-right" onclick="setPos('right')">Right</button>
+        </div>
+      </div>
+      <div class="fc" style="margin-bottom:10px">
+        <label>What did they do in auto?</label>
+        <div class="tg" id="ms-auto-action">
+          <button class="tb" onclick="multi(this)">Preloaded shot</button>
+          <button class="tb" onclick="multi(this)">Picked up balls</button>
+          <button class="tb" onclick="multi(this)">Crossed line</button>
+          <button class="tb" onclick="multi(this)">Scored speaker</button>
+          <button class="tb" onclick="multi(this)">Scored amp</button>
+          <button class="tb" onclick="multi(this)">Did nothing</button>
+          <button class="tb" onclick="multi(this)">Moved to trench</button>
+        </div>
+      </div>
+      <div class="fg">
+        <div class="fc"><label>Went over bump / trench?</label>
+          <div class="tg" id="ms-bump">
+            <button class="tb" onclick="excl('ms-bump',this)">Yes</button>
+            <button class="tb" onclick="excl('ms-bump',this)">No</button>
+            <button class="tb" onclick="excl('ms-bump',this)">Attempted</button>
+          </div>
+        </div>
+        <div class="fc"><label>Hung in auto?</label>
+          <div class="tg" id="ms-auto-hang">
+            <button class="tb" onclick="excl('ms-auto-hang',this)">Yes</button>
+            <button class="tb" onclick="excl('ms-auto-hang',this)">No</button>
+          </div>
+        </div>
+      </div>
+      <div class="fc" style="margin-top:8px"><label>Auto hang level</label>
+        <div class="tg" id="ms-auto-hang-lvl">
+          <button class="tb" onclick="excl('ms-auto-hang-lvl',this)">Low</button>
+          <button class="tb" onclick="excl('ms-auto-hang-lvl',this)">Mid</button>
+          <button class="tb" onclick="excl('ms-auto-hang-lvl',this)">High</button>
+          <button class="tb" onclick="excl('ms-auto-hang-lvl',this)">Traversal</button>
+          <button class="tb" onclick="excl('ms-auto-hang-lvl',this)">N/A</button>
+        </div>
+      </div>
+      <div class="sec">Teleop</div>
+      <div class="fg">
+        <div class="fc"><label>Shooting mechanism</label>
+          <div class="tg" id="ms-shoot-mech">
+            <button class="tb" onclick="excl('ms-shoot-mech',this)">Turret</button>
+            <button class="tb" onclick="excl('ms-shoot-mech',this)">Standstill</button>
+            <button class="tb" onclick="excl('ms-shoot-mech',this)">Both</button>
+            <button class="tb" onclick="excl('ms-shoot-mech',this)">None</button>
+          </div>
+        </div>
+        <div class="fc"><label>Balls per shot</label>
+          <div class="tg" id="ms-balls">
+            <button class="tb" onclick="excl('ms-balls',this)">1</button>
+            <button class="tb" onclick="excl('ms-balls',this)">2</button>
+            <button class="tb" onclick="excl('ms-balls',this)">3</button>
+            <button class="tb" onclick="excl('ms-balls',this)">4+</button>
+          </div>
+        </div>
+        <div class="fc"><label>Can shoot while moving?</label>
+          <div class="tg" id="ms-moving">
+            <button class="tb" onclick="excl('ms-moving',this)">Yes</button>
+            <button class="tb" onclick="excl('ms-moving',this)">No</button>
+            <button class="tb" onclick="excl('ms-moving',this)">Sometimes</button>
+          </div>
+        </div>
+        <div class="fc"><label>Shot positions</label>
+          <div class="tg" id="ms-positions">
+            <button class="tb" onclick="excl('ms-positions',this)">Anywhere</button>
+            <button class="tb" onclick="excl('ms-positions',this)">Fixed zone</button>
+            <button class="tb" onclick="excl('ms-positions',this)">Near speaker only</button>
+            <button class="tb" onclick="excl('ms-positions',this)">Long range</button>
+          </div>
+        </div>
+        <div class="fc"><label>Intake type</label>
+          <div class="tg" id="ms-intake">
+            <button class="tb" onclick="excl('ms-intake',this)">Ground</button>
+            <button class="tb" onclick="excl('ms-intake',this)">Human player</button>
+            <button class="tb" onclick="excl('ms-intake',this)">Both</button>
+            <button class="tb" onclick="excl('ms-intake',this)">None</button>
+          </div>
+        </div>
+        <div class="fc"><label>Played defense?</label>
+          <div class="tg" id="ms-defense">
+            <button class="tb" onclick="excl('ms-defense',this)">No</button>
+            <button class="tb" onclick="excl('ms-defense',this)">Some</button>
+            <button class="tb" onclick="excl('ms-defense',this)">Heavy</button>
+          </div>
+        </div>
+      </div>
+      <div class="fc" style="margin-top:8px"><label>Strategy observed</label>
+        <textarea id="ms-strategy" placeholder="Cycling patterns, team coordination, notable plays..."></textarea>
+      </div>
+      <div class="sec">Endgame</div>
+      <div class="fg">
+        <div class="fc"><label>Endgame action</label>
+          <div class="tg" id="ms-eg-action">
+            <button class="tb" onclick="excl('ms-eg-action',this)">Hung</button>
+            <button class="tb" onclick="excl('ms-eg-action',this)">Just shot</button>
+            <button class="tb" onclick="excl('ms-eg-action',this)">Parked</button>
+            <button class="tb" onclick="excl('ms-eg-action',this)">Nothing</button>
+          </div>
+        </div>
+        <div class="fc"><label>Hang level</label>
+          <div class="tg" id="ms-hang-lvl">
+            <button class="tb" onclick="excl('ms-hang-lvl',this)">Low</button>
+            <button class="tb" onclick="excl('ms-hang-lvl',this)">Mid</button>
+            <button class="tb" onclick="excl('ms-hang-lvl',this)">High</button>
+            <button class="tb" onclick="excl('ms-hang-lvl',this)">Traversal</button>
+            <button class="tb" onclick="excl('ms-hang-lvl',this)">N/A</button>
+          </div>
+        </div>
+      </div>
+      <div class="fc" style="margin-top:8px"><label>Additional notes</label>
+        <textarea id="ms-notes" placeholder="Malfunctions, penalties, notable moments..."></textarea>
+      </div>
+      <button class="btn-primary" onclick="saveMatch()">Save & sync match entry</button>
+    </div>
+  </div>
+
+  <!-- ═══ LOOKUP ═══ -->
+  <div class="tab" id="tab-lookup">
+    <div class="search-row">
+      <input type="number" id="lu-num" placeholder="Enter team number..." onkeydown="if(event.key==='Enter')doLookup()">
+      <button class="search-btn" onclick="doLookup()">Look up</button>
+    </div>
+    <div id="lu-result"></div>
+  </div>
+
+  <!-- ═══ DASHBOARD ═══ -->
+  <div class="tab" id="tab-dash">
+    <div id="dash-content"></div>
+  </div>
+
+</div><!-- .app -->
+</div><!-- #main-app -->
+
+<script>
+// ══════════════════════════════════════════════
+//  SYNC BACKEND — uses Claude artifact storage
+//  Falls back to localStorage if not available
+// ══════════════════════════════════════════════
+const storage = window.storage || {
+  async get(k){try{const v=localStorage.getItem('frc_'+k);return v?{value:v}:null;}catch{return null;}},
+  async set(k,v){try{localStorage.setItem('frc_'+k,v);return{value:v};}catch{return null;}},
+};
+
+let ROOM='', SCOUT='', MY_TEAM='';
+let DB={pre:{},matches:[],schedule:[],alarms:[]};
+let startPos='', tempAwards=[], alarmTimers=[];
+
+// ── Room ──────────────────────────────────────
+function joinRoom(){
+  const code=document.getElementById('room-code-input').value.trim().toUpperCase();
+  const name=document.getElementById('scout-name').value.trim()||'Scout';
+  if(code.length<2){toast('Enter a room code','err');return;}
+  ROOM=code; SCOUT=name;
+  localStorage.setItem('frc_room',ROOM); localStorage.setItem('frc_scout',SCOUT);
+  document.getElementById('room-screen').style.display='none';
+  document.getElementById('main-app').style.display='block';
+  setSyncStatus('pulse',`Joining ${ROOM}…`);
+  pullData(true);
+}
+function leaveRoom(){
+  ROOM=''; SCOUT=''; DB={pre:{},matches:[],schedule:[],alarms:[]};
+  localStorage.removeItem('frc_room');
+  document.getElementById('main-app').style.display='none';
+  document.getElementById('room-screen').style.display='block';
+}
+window.addEventListener('load',()=>{
+  const r=localStorage.getItem('frc_room'), s=localStorage.getItem('frc_scout');
+  MY_TEAM=localStorage.getItem('frc_myteam')||'';
+  if(MY_TEAM){document.getElementById('my-team').value=MY_TEAM;document.getElementById('my-team-label').textContent='Watching: '+MY_TEAM;}
+  if(r){
+    ROOM=r; SCOUT=s||'Scout';
+    document.getElementById('room-screen').style.display='none';
+    document.getElementById('main-app').style.display='block';
+    setSyncStatus('pulse','Reconnecting…');
+    pullData(true);
+  }
+  renderAwardsList(); renderSchedList(); renderAlarmList(); renderNextBanner();
+  setInterval(tickAlarms,20000); tickAlarms();
+  if('Notification' in window && Notification.permission==='default') Notification.requestPermission();
+});
+
+// ── Sync ──────────────────────────────────────
+function setSyncStatus(state,msg){
+  const dot=document.getElementById('sync-dot');
+  dot.className='sync-dot'+(state==='on'?' on':state==='pulse'?' pulse':'');
+  document.getElementById('sync-info').textContent=msg;
+}
+async function push(label){
+  if(!ROOM) return;
+  setSyncStatus('pulse','Syncing…');
+  try{
+    await storage.set('room:'+ROOM, JSON.stringify({...DB,updatedBy:SCOUT,updatedAt:Date.now()}), true);
+    setSyncStatus('on',`${ROOM} · synced · ${new Date().toLocaleTimeString()}`);
+    toast(label+' saved & synced','ok');
+  }catch(e){setSyncStatus('','Sync failed');toast('Sync failed — saved locally','err');}
+}
+async function pullData(silent){
+  if(!ROOM) return;
+  setSyncStatus('pulse','Pulling…');
+  try{
+    const res=await storage.get('room:'+ROOM, true);
+    if(res&&res.value){
+      const remote=JSON.parse(res.value);
+      const merged=[...(remote.matches||[])];
+      DB.matches.forEach(m=>{if(!merged.find(r=>r.team===m.team&&r.match===m.match))merged.push(m);});
+      DB.pre={...(remote.pre||{}),...DB.pre};
+      DB.matches=merged;
+      if(remote.schedule?.length) DB.schedule=remote.schedule;
+      if(remote.alarms?.length&&!DB.alarms.length) DB.alarms=remote.alarms;
+      const ago=remote.updatedAt?since(remote.updatedAt):'?';
+      setSyncStatus('on',`${ROOM} · ${ago} by ${remote.updatedBy||'?'}`);
+      renderSchedList(); renderAlarmList(); renderNextBanner();
+      if(!silent) toast('Pulled latest data','sync');
+    } else {
+      setSyncStatus('on',`${ROOM} · no data yet`);
+      if(!silent) toast('Room is empty — start scouting!','sync');
+    }
+  }catch(e){setSyncStatus('','Could not reach sync');if(!silent) toast('Pull failed','err');}
+}
+function since(ts){const s=Math.floor((Date.now()-ts)/1000);if(s<10)return'just now';if(s<60)return s+'s ago';if(s<3600)return Math.floor(s/60)+'m ago';return Math.floor(s/3600)+'h ago';}
+
+// ── UI helpers ────────────────────────────────
+function showTab(name,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  (btn||document.querySelectorAll('.nav-btn')[{sched:0,pre:1,match:2,lookup:3,dash:4}[name]]).classList.add('active');
+  if(name==='dash') renderDash();
+  if(name==='sched'){renderSchedList();renderNextBanner();}
+}
+function excl(gid,btn){document.querySelectorAll('#'+gid+' .tb').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');}
+function multi(btn){btn.classList.toggle('sel');}
+function getExcl(gid){const s=document.querySelector('#'+gid+' .tb.sel');return s?s.textContent.trim():'';}
+function getMulti(gid){return Array.from(document.querySelectorAll('#'+gid+' .tb.sel')).map(b=>b.textContent.trim());}
+function getVal(id){return(document.getElementById(id)||{}).value||'';}
+function setPos(p){startPos=p;['left','center','right'].forEach(x=>document.getElementById('pos-'+x)?.classList.toggle('sel',x===p));}
+function toast(msg,type='ok'){const t=document.getElementById('toast');t.textContent=msg;t.className='show '+type;setTimeout(()=>t.className='',2800);}
+
+// ── My team ───────────────────────────────────
+function setMyTeam(){
+  MY_TEAM=getVal('my-team');
+  localStorage.setItem('frc_myteam',MY_TEAM);
+  document.getElementById('my-team-label').textContent=MY_TEAM?'Watching: '+MY_TEAM:'';
+  renderSchedList(); renderNextBanner();
+}
+
+// ── Awards ────────────────────────────────────
+function addAward(){const n=getVal('aw-name');if(!n)return;tempAwards.push({name:n,event:getVal('aw-event')});renderAwardsList();document.getElementById('aw-name').value='';document.getElementById('aw-event').value='';}
+function removeAward(i){tempAwards.splice(i,1);renderAwardsList();}
+function renderAwardsList(){
+  const el=document.getElementById('awards-list');if(!el)return;
+  if(!tempAwards.length){el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:4px 0">No awards added</div>';return;}
+  el.innerHTML=tempAwards.map((a,i)=>`<div class="row"><span style="font-weight:500">${a.name}</span><span style="color:var(--text2)">${a.event}</span><button class="del-btn" onclick="removeAward(${i})">×</button></div>`).join('');
+}
+
+// ── Schedule ──────────────────────────────────
+function parseTeams(s){return s.split(',').map(t=>t.trim()).filter(Boolean);}
+function addSchedMatch(){
+  const num=getVal('sch-num'),time=getVal('sch-time'),red=parseTeams(getVal('sch-red')),blue=parseTeams(getVal('sch-blue'));
+  if(!num||!red.length||!blue.length){toast('Fill match #, red & blue teams','err');return;}
+  const i=DB.schedule.findIndex(m=>m.num==num);
+  const e={num:parseInt(num),time,red,blue,status:getVal('sch-status')};
+  if(i>=0) DB.schedule[i]=e; else DB.schedule.push(e);
+  DB.schedule.sort((a,b)=>a.num-b.num);
+  document.getElementById('sch-num').value=''; document.getElementById('sch-time').value='';
+  document.getElementById('sch-red').value=''; document.getElementById('sch-blue').value='';
+  renderSchedList(); renderNextBanner();
+  toast('Match '+num+' added','ok');
+}
+async function saveSchedule(){await push('Schedule');}
+
+function getNextMatch(){
+  const up=DB.schedule.filter(m=>m.status!=='completed');
+  if(!up.length) return null;
+  const now=new Date(),today=now.toDateString();
+  const future=up.filter(m=>m.time&&new Date(today+' '+m.time)>now).sort((a,b)=>new Date(today+' '+a.time)-new Date(today+' '+b.time));
+  return future.length?future[0]:up[0];
+}
+
+function teamSnippet(team){
+  const pre=DB.pre[team]; const ms=DB.matches.filter(m=>m.team==team);
+  const hangLvls=ms.map(m=>m.endgame?.hangLvl).filter(x=>x&&x!=='N/A');
+  const mechs=[...new Set(ms.map(m=>m.tele?.shootMech).filter(Boolean))];
+  const ic={Low:'bg',Medium:'ba',High:'ba',Powerhouse:'br','':'bb'}[pre?.impact||''];
+  let h=`<span style="font-weight:600">Team ${team}</span>`;
+  if(pre?.name) h+=` <span style="color:var(--text2);font-size:12px">${pre.name}</span>`;
+  if(pre?.impact) h+=` <span class="badge ${ic}" style="font-size:10px">${pre.impact}</span>`;
+  const d=[];
+  if(mechs.length) d.push('Shooter: '+mechs.join('/'));
+  if(hangLvls.length) d.push('Best hang: '+[...hangLvls].pop());
+  if(ms.length) d.push(ms.length+' match'+(ms.length>1?'es':''));
+  if(pre?.awards?.length) d.push(pre.awards.length+' award'+(pre.awards.length>1?'s':''));
+  if(d.length) h+=`<br><span style="font-size:11px;color:var(--text3)">${d.join(' · ')}</span>`;
+  return h;
+}
+
+function renderNextBanner(){
+  const wrap=document.getElementById('next-banner-wrap');if(!wrap)return;
+  const next=getNextMatch(); if(!next){wrap.innerHTML='';return;}
+  const mt=MY_TEAM||localStorage.getItem('frc_myteam')||'';
+  let timeStr='';
+  if(next.time){const d=new Date(new Date().toDateString()+' '+next.time);const mins=Math.round((d-new Date())/60000);timeStr=mins>0?` · in ${mins} min`:(mins===0?' · now!':(mins>-30?' · just started':''));}
+  wrap.innerHTML=`
+  <div class="next-banner">
+    <div class="sub">Next match</div>
+    <div class="title">Match ${next.num}${timeStr}</div>
+    <div class="alliances">
+      <div><div class="al-label">Red alliance</div>${next.red.map(t=>`<span class="team-chip red${t==mt?' us':''}" onclick="quickLookup(${t})">${t}</span>`).join('')}</div>
+      <div><div class="al-label">Blue alliance</div>${next.blue.map(t=>`<span class="team-chip blue${t==mt?' us':''}" onclick="quickLookup(${t})">${t}</span>`).join('')}</div>
+    </div>
+  </div>`;
+}
+
+function renderSchedList(){
+  const el=document.getElementById('sched-list');if(!el)return;
+  if(!DB.schedule.length){el.innerHTML='';return;}
+  const mt=MY_TEAM||localStorage.getItem('frc_myteam')||'';
+  const next=getNextMatch();
+  let html='';
+  DB.schedule.forEach(m=>{
+    const isNext=next&&next.num===m.num;
+    const done=m.status==='completed';
+    const mine=mt&&(m.red.includes(mt)||m.blue.includes(mt));
+    html+=`<div class="sched-match${isNext?' next-up':''}${done?' completed':''}">`;
+    html+=`<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:8px">`;
+    html+=`<div style="display:flex;align-items:center;gap:6px"><span style="font-weight:600">Match ${m.num}</span>`;
+    if(isNext) html+=`<span class="badge bb">Next up</span>`;
+    if(mine) html+=`<span class="badge bg">Your match</span>`;
+    html+=`</div>`;
+    html+=`<div style="display:flex;align-items:center;gap:8px">`;
+    if(m.time) html+=`<span style="font-size:12px;color:var(--text2)">${m.time}</span>`;
+    html+=`<select onchange="updateMatchStatus(${m.num},this.value)" style="font-size:12px;padding:3px 6px;width:auto">
+      <option value="upcoming"${!done?' selected':''}>Upcoming</option>
+      <option value="completed"${done?' selected':''}>Completed</option>
+    </select>`;
+    html+=`<button class="del-btn" onclick="removeSchedMatch(${m.num})">×</button>`;
+    html+=`</div></div>`;
+    html+=`<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">`;
+    html+=`<span style="font-size:11px;color:#A32D2D;font-weight:600;min-width:32px">RED</span>`;
+    html+=m.red.map(t=>`<span class="team-chip red${t==mt?' us':''}" onclick="quickLookup(${t})">${t}</span>`).join('');
+    html+=`</div><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">`;
+    html+=`<span style="font-size:11px;color:#185FA5;font-weight:600;min-width:32px">BLUE</span>`;
+    html+=m.blue.map(t=>`<span class="team-chip blue${t==mt?' us':''}" onclick="quickLookup(${t})">${t}</span>`).join('');
+    html+=`</div>`;
+    // Intel for next match
+    if(isNext){
+      const others=[...m.red,...m.blue].filter(t=>t!=mt);
+      const withData=others.filter(t=>DB.pre[t]||DB.matches.some(x=>x.team==t));
+      if(withData.length){
+        html+=`<div style="margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border)">`;
+        html+=`<div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Team intel</div>`;
+        withData.forEach(t=>{html+=`<div class="preview-card">${teamSnippet(t)}</div>`;});
+        html+=`</div>`;
+      }
+    }
+    html+=`</div>`;
+  });
+  el.innerHTML=html;
+}
+function updateMatchStatus(num,s){const m=DB.schedule.find(x=>x.num==num);if(m){m.status=s;renderSchedList();renderNextBanner();}}
+function removeSchedMatch(num){DB.schedule=DB.schedule.filter(m=>m.num!=num);renderSchedList();renderNextBanner();}
+function quickLookup(team){
+  document.getElementById('lu-num').value=team;
+  showTab('lookup');
+  document.querySelectorAll('.nav-btn').forEach((b,i)=>b.classList.toggle('active',i===3));
+  doLookup();
+}
+
+// ── Alarms ────────────────────────────────────
+function addAlarm(){
+  const matchNum=getVal('al-match'),minStr=getExcl('al-mins');
+  if(!matchNum||!minStr){toast('Pick match # and minutes before','err');return;}
+  const mins=parseInt(minStr);
+  const match=DB.schedule.find(m=>m.num==matchNum);
+  if(!match){toast('Match '+matchNum+' not in schedule yet','err');return;}
+  if(!match.time){toast('Match '+matchNum+' has no time set','err');return;}
+  const key=matchNum+'_'+mins;
+  if(DB.alarms.find(a=>a.key===key)){toast('Alarm already set','err');return;}
+  DB.alarms.push({key,matchNum:parseInt(matchNum),mins,time:match.time,fired:false});
+  renderAlarmList(); scheduleAlarm({matchNum:parseInt(matchNum),mins,time:match.time,key});
+  toast(`Alarm: ${mins} min before match ${matchNum}`,'ok');
+}
+function removeAlarm(key){DB.alarms=DB.alarms.filter(a=>a.key!==key);renderAlarmList();}
+function renderAlarmList(){
+  const el=document.getElementById('alarm-list');if(!el)return;
+  if(!DB.alarms.length){el.innerHTML='<div style="font-size:12px;color:var(--text3)">No alarms set</div>';return;}
+  el.innerHTML=DB.alarms.map(a=>`<div class="alarm-row">
+    <span style="font-size:16px">${a.fired?'✓':'⏰'}</span>
+    <span style="${a.fired?'color:var(--text3);text-decoration:line-through':''}">Match ${a.matchNum} · ${a.mins} min before · ${a.time}</span>
+    ${a.fired?'<span class="badge bg">Fired</span>':'<span class="badge ba">Active</span>'}
+    <button class="del-btn" onclick="removeAlarm('${a.key}')">×</button>
+  </div>`).join('');
+}
+function scheduleAlarm(alarm){
+  const mt=new Date(new Date().toDateString()+' '+alarm.time);
+  const fireAt=new Date(mt.getTime()-alarm.mins*60000);
+  const delay=fireAt-new Date();
+  if(delay<=-1000) return;
+  if(alarmTimers.find(t=>t.key===alarm.key)) return;
+  const id=setTimeout(()=>fireAlarm(alarm),Math.max(0,delay));
+  alarmTimers.push({key:alarm.key,id});
+}
+function fireAlarm(alarm){
+  const a=DB.alarms.find(x=>x.key===alarm.key);if(a)a.fired=true;
+  renderAlarmList();
+  toast(`⏰ Match ${alarm.matchNum} in ${alarm.mins} min!`,'alarm');
+  if('Notification' in window&&Notification.permission==='granted'){
+    new Notification('FRC Scout — Match alert',{body:`Match ${alarm.matchNum} starts in ${alarm.mins} minutes!`});
+  }
+  renderNextBanner();
+}
+function tickAlarms(){
+  DB.alarms.filter(a=>!a.fired).forEach(a=>{if(!alarmTimers.find(t=>t.key===a.key))scheduleAlarm(a);});
+}
+
+// ── Save ──────────────────────────────────────
+async function savePreMatch(){
+  const num=getVal('pr-num');if(!num){toast('Enter team number','err');return;}
+  DB.pre[num]={num,name:getVal('pr-name'),rookie:getVal('pr-rookie'),region:getVal('pr-region'),champs:getExcl('pr-champs'),champWin:getExcl('pr-champwin'),awards:[...tempAwards],impact:getExcl('pr-impact'),notes:getVal('pr-notes'),savedBy:SCOUT,savedAt:new Date().toLocaleString()};
+  tempAwards=[]; renderAwardsList();
+  await push('Team '+num+' pre-match');
+}
+async function saveMatch(){
+  const team=getVal('ms-team'),match=getVal('ms-match');
+  if(!team||!match){toast('Enter team and match number','err');return;}
+  const i=DB.matches.findIndex(m=>m.team==team&&m.match==match);
+  const e={team,match,alliance:getVal('ms-alliance'),auto:{startPos,actions:getMulti('ms-auto-action'),bump:getExcl('ms-bump'),hung:getExcl('ms-auto-hang'),hangLvl:getExcl('ms-auto-hang-lvl')},tele:{shootMech:getExcl('ms-shoot-mech'),balls:getExcl('ms-balls'),moving:getExcl('ms-moving'),positions:getExcl('ms-positions'),intake:getExcl('ms-intake'),defense:getExcl('ms-defense'),strategy:getVal('ms-strategy')},endgame:{action:getExcl('ms-eg-action'),hangLvl:getExcl('ms-hang-lvl')},notes:getVal('ms-notes'),savedBy:SCOUT,savedAt:new Date().toLocaleString()};
+  if(i>=0) DB.matches[i]=e; else DB.matches.push(e);
+  await push('Match '+match+' team '+team);
+  document.getElementById('ms-match').value=parseInt(match)+1;
+  startPos=''; ['left','center','right'].forEach(x=>document.getElementById('pos-'+x)?.classList.remove('sel'));
+  ['ms-auto-action','ms-bump','ms-auto-hang','ms-auto-hang-lvl','ms-shoot-mech','ms-balls','ms-moving','ms-positions','ms-intake','ms-defense','ms-eg-action','ms-hang-lvl'].forEach(id=>{document.querySelectorAll('#'+id+' .tb').forEach(b=>b.classList.remove('sel'));});
+  document.getElementById('ms-strategy').value=''; document.getElementById('ms-notes').value='';
+}
+
+// ── Lookup ────────────────────────────────────
+function doLookup(){
+  const num=document.getElementById('lu-num').value;if(!num)return;
+  const pre=DB.pre[num],ms=DB.matches.filter(m=>m.team==num);
+  const el=document.getElementById('lu-result');
+  if(!pre&&!ms.length){el.innerHTML=`<div class="card" style="text-align:center;padding:2rem;color:var(--text2)">No data for team ${num}.<br><small style="font-size:12px;display:block;margin-top:6px">Scout them first.</small></div>`;return;}
+  const hangLvls=ms.map(m=>m.endgame?.hangLvl).filter(x=>x&&x!=='N/A');
+  const bestHang=hangLvls.length?[...hangLvls].pop():'—';
+  const autoActions=[...new Set(ms.flatMap(m=>m.auto?.actions||[]))];
+  const mechs=[...new Set(ms.map(m=>m.tele?.shootMech).filter(Boolean))];
+  const intakes=[...new Set(ms.map(m=>m.tele?.intake).filter(Boolean))];
+  const canMove=ms.some(m=>m.tele?.moving==='Yes'||m.tele?.moving==='Sometimes');
+  const pos=[...new Set(ms.map(m=>m.tele?.positions).filter(Boolean))];
+  const defCount=ms.filter(m=>m.tele?.defense&&m.tele.defense!=='No').length;
+  const bumpCount=ms.filter(m=>m.auto?.bump==='Yes').length;
+  const ic={Low:'bg',Medium:'ba',High:'ba',Powerhouse:'br'}[pre?.impact]||'bb';
+  const scouts=[...new Set(ms.map(m=>m.savedBy).filter(Boolean))];
+  let h=`<div class="card">`;
+  h+=`<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem"><div><div style="font-size:22px;font-weight:700">Team ${num}</div><div style="font-size:14px;color:var(--text2)">${pre?.name||'Unknown'}${pre?.region?' · '+pre.region:''}${pre?.rookie?' · Est. '+pre.rookie:''}</div></div>${pre?.impact?`<span class="badge ${ic}" style="font-size:13px;padding:4px 14px">${pre.impact}</span>`:''}</div>`;
+  h+=`<div class="stat-grid"><div class="stat-card"><div class="stat-label">Matches scouted</div><div class="stat-val">${ms.length}</div></div><div class="stat-card"><div class="stat-label">Best hang</div><div class="stat-val" style="font-size:16px">${bestHang}</div></div><div class="stat-card"><div class="stat-label">Champs</div><div class="stat-val" style="font-size:13px">${pre?.champs||'—'}${pre?.champWin==='Yes'?' · Won':''}</div></div></div>`;
+  if(pre?.awards?.length){h+=`<div class="sec">Awards</div>`;h+=pre.awards.map(a=>`<div class="award-item"><span class="badge ba">★</span><div><div style="font-size:13px;font-weight:500">${a.name}</div><div style="font-size:12px;color:var(--text2)">${a.event}</div></div></div>`).join('');}
+  if(ms.length){
+    h+=`<div class="sec" style="margin-top:1.25rem">Robot profile</div><div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px">`;
+    mechs.forEach(s=>h+=`<span class="badge bb">Shooter: ${s}</span>`);
+    intakes.forEach(s=>h+=`<span class="badge bg">Intake: ${s}</span>`);
+    pos.forEach(s=>h+=`<span class="badge ba">${s}</span>`);
+    if(canMove) h+=`<span class="badge bp">Shoots while moving</span>`;
+    [...new Set(ms.map(m=>m.tele?.balls).filter(Boolean))].forEach(b=>h+=`<span class="badge bb">${b} ball(s)/shot</span>`);
+    if(bumpCount) h+=`<span class="badge ba">Crossed bump ${bumpCount}×</span>`;
+    if(defCount) h+=`<span class="badge br">Defense ${defCount}/${ms.length} matches</span>`;
+    h+=`</div>`;
+    h+=`<div class="sec">Auto tendencies</div>`;
+    if(autoActions.length) h+=`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px">`+autoActions.map(a=>`<span class="badge bb">${a}</span>`).join('')+`</div>`;
+    const sp=[...new Set(ms.map(m=>m.auto?.startPos).filter(Boolean))];
+    if(sp.length) h+=`<div style="font-size:12px;color:var(--text2)">Starts from: `+sp.map(p=>`<strong>${p}</strong>`).join(', ')+`</div>`;
+    h+=`<div class="sec" style="margin-top:1.25rem">Match history</div>`;
+    ms.slice(-6).reverse().forEach(m=>{
+      h+=`<div class="row"><span style="font-weight:600;min-width:36px">M${m.match}</span><span class="badge ${m.alliance==='red'?'br':'bb'}">${m.alliance}</span><span style="color:var(--text2);font-size:12px">${m.auto?.startPos||'?'} start</span><span style="font-size:12px">${m.endgame?.action||'—'}${m.endgame?.hangLvl&&m.endgame.hangLvl!=='N/A'?' · '+m.endgame.hangLvl:''}</span>${m.savedBy?`<span style="font-size:11px;color:var(--text3)">${m.savedBy}</span>`:''}</div>`;
+      if(m.tele?.strategy) h+=`<div style="font-size:12px;color:var(--text2);padding:3px 0 6px;border-bottom:0.5px solid var(--border)">${m.tele.strategy}</div>`;
+    });
+    if(scouts.length) h+=`<div style="font-size:12px;color:var(--text3);margin-top:8px">Scouted by: ${scouts.join(', ')}</div>`;
+  }
+  if(pre?.notes) h+=`<div class="sec" style="margin-top:1.25rem">Scout notes</div><div style="font-size:13px;color:var(--text2);line-height:1.6">${pre.notes}</div>${pre.savedBy?`<div style="font-size:11px;color:var(--text3);margin-top:6px">By ${pre.savedBy} · ${pre.savedAt}</div>`:''}`;
+  h+=`</div>`; el.innerHTML=h;
+}
+
+// ── Dashboard ─────────────────────────────────
+function renderDash(){
+  const el=document.getElementById('dash-content');
+  const teams=[...new Set([...Object.keys(DB.pre),...DB.matches.map(m=>m.team)])];
+  if(!teams.length){el.innerHTML=`<div class="card" style="text-align:center;padding:2rem;color:var(--text2)">No data yet.<br><small style="display:block;margin-top:4px;font-size:12px">Use ↓ Pull to load room data.</small></div>`;return;}
+  const order={Powerhouse:4,High:3,Medium:2,Low:1,'':0};
+  const rows=teams.map(t=>{const pre=DB.pre[t];const ms=DB.matches.filter(m=>m.team==t);const h=ms.map(m=>m.endgame?.hangLvl).filter(x=>x&&x!=='N/A');return{t,name:pre?.name||'',matches:ms.length,impact:pre?.impact||'',bestHang:h.pop()||'—',awards:pre?.awards?.length||0};}).sort((a,b)=>order[b.impact]-order[a.impact]);
+  const scouts=[...new Set(DB.matches.map(m=>m.savedBy).filter(Boolean))];
+  let h=`<div class="card"><div class="card-title">Room: ${ROOM}</div><div class="stat-grid" style="margin-bottom:1.25rem"><div class="stat-card"><div class="stat-label">Teams tracked</div><div class="stat-val">${teams.length}</div></div><div class="stat-card"><div class="stat-label">Total matches</div><div class="stat-val">${DB.matches.length}</div></div><div class="stat-card"><div class="stat-label">Scouts active</div><div class="stat-val">${scouts.length||1}</div></div></div>`;
+  if(scouts.length) h+=`<div style="font-size:12px;color:var(--text3);margin-bottom:1rem">Scouts: ${scouts.join(' · ')}</div>`;
+  rows.forEach(r=>{const ic={Low:'bg',Medium:'ba',High:'ba',Powerhouse:'br'}[r.impact]||'';h+=`<div class="row" style="cursor:pointer" onclick="quickLookup(${r.t})"><span style="font-weight:600">Team ${r.t}</span><span style="color:var(--text2);font-size:12px;flex:1;padding-left:8px">${r.name}</span><span style="font-size:12px;color:var(--text2)">${r.matches} match${r.matches!==1?'es':''}</span><span style="font-size:12px;color:var(--text2)">Hang: ${r.bestHang}</span>${r.awards?`<span class="badge ba">${r.awards} award${r.awards!==1?'s':''}</span>`:''}${r.impact?`<span class="badge ${ic}">${r.impact}</span>`:''}</div>`;});
+  h+=`</div>`; el.innerHTML=h;
+}
+</script>
+</body>
+</html>
