@@ -228,7 +228,7 @@
       <div class="fc" style="margin-bottom:10px">
         <label>What did they do in auto?</label>
         <div class="tg" id="ms-auto-action">
-          <button class="tb" onclick="multi(this)">Preloaded shot</button><button class="tb" onclick="multi(this)">Picked up balls</button><button class="tb" onclick="multi(this)">Crossed line</button><button class="tb" onclick="multi(this)">Scored speaker</button><button class="tb" onclick="multi(this)">Scored amp</button><button class="tb" onclick="multi(this)">Did nothing</button><button class="tb" onclick="multi(this)">Moved to trench</button>
+          <button class="tb" onclick="excl('ms-auto-action',this)">Shot 1 load &amp; hung</button><button class="tb" onclick="excl('ms-auto-action',this)">Shot 1 load</button><button class="tb" onclick="excl('ms-auto-action',this)">Shot 2 loads &amp; hung</button>
         </div>
       </div>
       <div class="fg">
@@ -240,7 +240,7 @@
         </div>
       </div>
       <div class="fc" style="margin-top:8px"><label>Auto hang level</label>
-        <div class="tg" id="ms-auto-hang-lvl"><button class="tb" onclick="excl('ms-auto-hang-lvl',this)">Level 1</button><button class="tb" onclick="excl('ms-auto-hang-lvl',this)">Level 2</button><button class="tb" onclick="excl('ms-auto-hang-lvl',this)">Level 3</button><button class="tb" onclick="excl('ms-auto-hang-lvl',this)">N/A</button></div>
+        <div class="tg" id="ms-auto-hang-lvl"><button class="tb" onclick="excl('ms-auto-hang-lvl',this)">1</button><button class="tb" onclick="excl('ms-auto-hang-lvl',this)">2</button><button class="tb" onclick="excl('ms-auto-hang-lvl',this)">3</button><button class="tb" onclick="excl('ms-auto-hang-lvl',this)">None</button></div>
       </div>
       <div class="sec">Teleop</div>
       <div class="fg">
@@ -257,7 +257,7 @@
           <div class="tg" id="ms-positions"><button class="tb" onclick="excl('ms-positions',this)">Anywhere</button><button class="tb" onclick="excl('ms-positions',this)">Fixed zone</button><button class="tb" onclick="excl('ms-positions',this)">Near human player/hang only</button><button class="tb" onclick="excl('ms-positions',this)">Long range</button></div>
         </div>
         <div class="fc"><label>Intake type</label>
-          <div class="tg" id="ms-intake"><button class="tb" onclick="excl('ms-intake',this)">Ground</button><button class="tb" onclick="excl('ms-intake',this)">Human player</button><button class="tb" onclick="excl('ms-intake',this)">Both</button><button class="tb" onclick="excl('ms-intake',this)">None</button></div>
+          <div class="tg" id="ms-intake"><button class="tb" onclick="excl('ms-intake',this)">Ground</button><button class="tb" onclick="excl('ms-intake',this)">Human player</button><button class="tb" onclick="excl('ms-intake',this)">Both</button><button class="tb" onclick="excl('ms-intake',this)">2 intake</button><button class="tb" onclick="excl('ms-intake',this)">None</button></div>
         </div>
         <div class="fc"><label>Played defense?</label>
           <div class="tg" id="ms-defense"><button class="tb" onclick="excl('ms-defense',this)">No</button><button class="tb" onclick="excl('ms-defense',this)">Some</button><button class="tb" onclick="excl('ms-defense',this)">Heavy</button></div>
@@ -266,13 +266,16 @@
       <div class="fc" style="margin-top:8px"><label>Strategy observed</label>
         <textarea id="ms-strategy" placeholder="Cycling patterns, team coordination, notable plays..."></textarea>
       </div>
+      <div class="fc" style="margin-top:8px"><label>Hopper capacity (# of balls)</label>
+        <input type="number" id="ms-hopper" placeholder="e.g. 5" style="max-width:140px">
+      </div>
       <div class="sec">Endgame</div>
       <div class="fg">
         <div class="fc"><label>Endgame action</label>
           <div class="tg" id="ms-eg-action"><button class="tb" onclick="excl('ms-eg-action',this)">Hung</button><button class="tb" onclick="excl('ms-eg-action',this)">Just shot</button><button class="tb" onclick="excl('ms-eg-action',this)">Nothing</button></div>
         </div>
         <div class="fc"><label>Hang level</label>
-          <div class="tg" id="ms-hang-lvl"><button class="tb" onclick="excl('ms-hang-lvl',this)">Level 1</button><button class="tb" onclick="excl('ms-hang-lvl',this)">Level 2</button><button class="tb" onclick="excl('ms-hang-lvl',this)">Level 3</button><button class="tb" onclick="excl('ms-hang-lvl',this)">N/A</button></div>
+          <div class="tg" id="ms-hang-lvl"><button class="tb" onclick="excl('ms-hang-lvl',this)">1</button><button class="tb" onclick="excl('ms-hang-lvl',this)">2</button><button class="tb" onclick="excl('ms-hang-lvl',this)">3</button><button class="tb" onclick="excl('ms-hang-lvl',this)">None</button></div>
         </div>
       </div>
       <div class="fc" style="margin-top:8px"><label>Additional notes</label>
@@ -507,13 +510,13 @@ window.savePreMatch=savePreMatch;
 async function saveMatch(){
   const team=getVal('ms-team'),match=getVal('ms-match');if(!team||!match){toast('Enter team and match number','err');return;}
   const i=DB.matches.findIndex(m=>m.team==team&&m.match==match);
-  const e={team,match,alliance:getVal('ms-alliance'),auto:{startPos,actions:getMulti('ms-auto-action'),bump:getExcl('ms-bump'),hung:getExcl('ms-auto-hang'),hangLvl:getExcl('ms-auto-hang-lvl')},tele:{shootMech:getExcl('ms-shoot-mech'),balls:getExcl('ms-balls'),moving:getExcl('ms-moving'),positions:getExcl('ms-positions'),intake:getExcl('ms-intake'),defense:getExcl('ms-defense'),strategy:getVal('ms-strategy')},endgame:{action:getExcl('ms-eg-action'),hangLvl:getExcl('ms-hang-lvl')},notes:getVal('ms-notes'),savedBy:SCOUT,savedAt:new Date().toLocaleString()};
+  const e={team,match,alliance:getVal('ms-alliance'),auto:{startPos,action:getExcl('ms-auto-action'),bump:getExcl('ms-bump'),hung:getExcl('ms-auto-hang'),hangLvl:getExcl('ms-auto-hang-lvl')},tele:{shootMech:getExcl('ms-shoot-mech'),balls:getExcl('ms-balls'),moving:getExcl('ms-moving'),positions:getExcl('ms-positions'),intake:getExcl('ms-intake'),hopper:getVal('ms-hopper'),defense:getExcl('ms-defense'),strategy:getVal('ms-strategy')},endgame:{action:getExcl('ms-eg-action'),hangLvl:getExcl('ms-hang-lvl')},notes:getVal('ms-notes'),savedBy:SCOUT,savedAt:new Date().toLocaleString()};
   if(i>=0)DB.matches[i]=e;else DB.matches.push(e);
   await pushDB('Match '+match+' · team '+team);
   document.getElementById('ms-match').value=parseInt(match)+1;
   startPos='';['left','center','right'].forEach(x=>document.getElementById('pos-'+x)?.classList.remove('sel'));
   ['ms-auto-action','ms-bump','ms-auto-hang','ms-auto-hang-lvl','ms-shoot-mech','ms-balls','ms-moving','ms-positions','ms-intake','ms-defense','ms-eg-action','ms-hang-lvl'].forEach(id=>{document.querySelectorAll('#'+id+' .tb').forEach(b=>b.classList.remove('sel'));});
-  document.getElementById('ms-strategy').value='';document.getElementById('ms-notes').value='';
+  document.getElementById('ms-strategy').value='';document.getElementById('ms-notes').value='';document.getElementById('ms-hopper').value='';
 }
 window.saveMatch=saveMatch;
 
