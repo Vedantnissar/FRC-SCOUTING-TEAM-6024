@@ -84,7 +84,7 @@
 </head>
 <body>
 <div id="toast"></div>
- 
+
 <div id="room-screen">
   <div class="room-card">
     <h1>FRC Scout</h1>
@@ -103,7 +103,7 @@
     <div style="font-size:12px;color:var(--text3);text-align:center;margin-top:14px">Anyone with your room code can view and add entries.</div>
   </div>
 </div>
- 
+
 <div id="main-app" style="display:none">
 <div class="app">
   <div class="header">
@@ -122,7 +122,7 @@
     <button class="nav-btn" onclick="showTab('lookup',this)">Lookup</button>
     <button class="nav-btn" onclick="showTab('dash',this)">Dashboard</button>
   </div>
- 
+
   <div class="tab active" id="tab-sched">
     <div id="next-banner-wrap"></div>
     <div class="card">
@@ -167,7 +167,7 @@
       <div id="alarm-list"><div style="font-size:12px;color:var(--text3)">No alarms set</div></div>
     </div>
   </div>
- 
+
   <div class="tab" id="tab-pre">
     <div class="card">
       <div class="card-title">Pre-match team report</div>
@@ -206,7 +206,7 @@
       <button class="btn-primary" onclick="savePreMatch()">Save & sync pre-match report</button>
     </div>
   </div>
- 
+
   <div class="tab" id="tab-match">
     <div class="card">
       <div class="card-title">Match scouting</div>
@@ -233,14 +233,14 @@
       </div>
       <div class="fg">
         <div class="fc"><label>Went over bump / trench?</label>
-          <div class="tg" id="ms-bump"><button class="tb" onclick="excl('ms-bump',this)">Trench</button><button class="tb" onclick="excl('ms-bump',this)">Bump</button><button class="tb" onclick="excl('ms-bump',this)">Both</button></div>
+          <div class="tg" id="ms-bump"><button class="tb" onclick="excl('ms-bump',this)">Yes</button><button class="tb" onclick="excl('ms-bump',this)">No</button><button class="tb" onclick="excl('ms-bump',this)">Attempted</button></div>
         </div>
         <div class="fc"><label>Hung in auto?</label>
           <div class="tg" id="ms-auto-hang"><button class="tb" onclick="excl('ms-auto-hang',this)">Yes</button><button class="tb" onclick="excl('ms-auto-hang',this)">No</button></div>
         </div>
       </div>
       <div class="fc" style="margin-top:8px"><label>Auto hang level</label>
-        <div class="tg" id="ms-auto-hang-lvl"><button class="tb" onclick="excl('ms-auto-hang-lvl',this)">Low</button><button class="tb" onclick="excl('ms-auto-hang-lvl',this)">Mid</button><button class="tb" onclick="excl('ms-auto-hang-lvl',this)">High</button><button class="tb" onclick="excl('ms-auto-hang-lvl',this)">Traversal</button><button class="tb" onclick="excl('ms-auto-hang-lvl',this)">N/A</button></div>
+        <div class="tg" id="ms-auto-hang-lvl"><button class="tb" onclick="excl('ms-auto-hang-lvl',this)">Level 1</button><button class="tb" onclick="excl('ms-auto-hang-lvl',this)">Level 2</button><button class="tb" onclick="excl('ms-auto-hang-lvl',this)">Level 3</button><button class="tb" onclick="excl('ms-auto-hang-lvl',this)">N/A</button></div>
       </div>
       <div class="sec">Teleop</div>
       <div class="fg">
@@ -254,7 +254,7 @@
           <div class="tg" id="ms-moving"><button class="tb" onclick="excl('ms-moving',this)">Yes</button><button class="tb" onclick="excl('ms-moving',this)">No</button><button class="tb" onclick="excl('ms-moving',this)">Sometimes</button></div>
         </div>
         <div class="fc"><label>Shot positions</label>
-          <div class="tg" id="ms-positions"><button class="tb" onclick="excl('ms-positions',this)">Anywhere</button><button class="tb" onclick="excl('ms-positions',this)">Fixed zone</button><button class="tb" onclick="excl('ms-positions',this)">Near Hang/Human player only</button><button class="tb" onclick="excl('ms-positions',this)">Long range</button></div>
+          <div class="tg" id="ms-positions"><button class="tb" onclick="excl('ms-positions',this)">Anywhere</button><button class="tb" onclick="excl('ms-positions',this)">Fixed zone</button><button class="tb" onclick="excl('ms-positions',this)">Near human player/hang only</button><button class="tb" onclick="excl('ms-positions',this)">Long range</button></div>
         </div>
         <div class="fc"><label>Intake type</label>
           <div class="tg" id="ms-intake"><button class="tb" onclick="excl('ms-intake',this)">Ground</button><button class="tb" onclick="excl('ms-intake',this)">Human player</button><button class="tb" onclick="excl('ms-intake',this)">Both</button><button class="tb" onclick="excl('ms-intake',this)">None</button></div>
@@ -269,10 +269,10 @@
       <div class="sec">Endgame</div>
       <div class="fg">
         <div class="fc"><label>Endgame action</label>
-          <div class="tg" id="ms-eg-action"><button class="tb" onclick="excl('ms-eg-action',this)">Hung</button><button class="tb" onclick="excl('ms-eg-action',this)">Just shot</button><button class="tb" onclick="excl('ms-eg-action',this)">Defense</button><button class="tb" onclick="excl('ms-eg-action',this)">Nothing</button></div>
+          <div class="tg" id="ms-eg-action"><button class="tb" onclick="excl('ms-eg-action',this)">Hung</button><button class="tb" onclick="excl('ms-eg-action',this)">Just shot</button><button class="tb" onclick="excl('ms-eg-action',this)">Nothing</button></div>
         </div>
         <div class="fc"><label>Hang level</label>
-          <div class="tg" id="ms-hang-lvl"><button class="tb" onclick="excl('ms-hang-lvl',this)">Low</button><button class="tb" onclick="excl('ms-hang-lvl',this)">Mid</button><button class="tb" onclick="excl('ms-hang-lvl',this)">High</button><button class="tb" onclick="excl('ms-hang-lvl',this)">Traversal</button><button class="tb" onclick="excl('ms-hang-lvl',this)">N/A</button></div>
+          <div class="tg" id="ms-hang-lvl"><button class="tb" onclick="excl('ms-hang-lvl',this)">Level 1</button><button class="tb" onclick="excl('ms-hang-lvl',this)">Level 2</button><button class="tb" onclick="excl('ms-hang-lvl',this)">Level 3</button><button class="tb" onclick="excl('ms-hang-lvl',this)">N/A</button></div>
         </div>
       </div>
       <div class="fc" style="margin-top:8px"><label>Additional notes</label>
@@ -281,7 +281,7 @@
       <button class="btn-primary" onclick="saveMatch()">Save & sync match entry</button>
     </div>
   </div>
- 
+
   <div class="tab" id="tab-lookup">
     <div class="search-row">
       <input type="number" id="lu-num" placeholder="Enter team number..." onkeydown="if(event.key==='Enter')doLookup()">
@@ -289,26 +289,26 @@
     </div>
     <div id="lu-result"></div>
   </div>
- 
+
   <div class="tab" id="tab-dash">
     <div id="dash-content"></div>
   </div>
 </div>
 </div>
- 
+
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import{getDatabase,ref,set,get,onValue}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
- 
+
 const app=initializeApp({databaseURL:"https://frc-scout-34116-default-rtdb.firebaseio.com"});
 const db=getDatabase(app);
- 
+
 let ROOM='',SCOUT='',MY_TEAM='';
 let DB={pre:{},matches:[],schedule:[],alarms:[]};
 let startPos='',tempAwards=[],alarmTimers=[],unsub=null;
- 
+
 function dbRef(){return ref(db,'rooms/'+ROOM);}
- 
+
 async function pushDB(label){
   if(!ROOM)return;
   setSS('pulse','Syncing…');
@@ -318,7 +318,7 @@ async function pushDB(label){
     toast(label+' saved & synced ✓','ok');
   }catch(e){setSS('','Sync failed');toast('Sync failed','err');}
 }
- 
+
 function subscribe(){
   if(unsub)unsub();
   unsub=onValue(ref(db,'rooms/'+ROOM),(snap)=>{
@@ -335,7 +335,7 @@ function subscribe(){
     if(document.getElementById('tab-dash').classList.contains('active'))renderDash();
   },(e)=>{setSS('','Connection error');toast('Firebase error','err');});
 }
- 
+
 async function pullNow(){
   setSS('pulse','Pulling…');
   try{
@@ -352,7 +352,7 @@ async function pullNow(){
   }catch(e){setSS('','Pull failed');toast('Pull failed','err');}
 }
 window.pullNow=pullNow;
- 
+
 function joinRoom(){
   const code=document.getElementById('room-code-input').value.trim().toUpperCase();
   const name=document.getElementById('scout-name').value.trim()||'Scout';
@@ -365,7 +365,7 @@ function joinRoom(){
   subscribe();
 }
 window.joinRoom=joinRoom;
- 
+
 function leaveRoom(){
   if(unsub)unsub();ROOM='';SCOUT='';DB={pre:{},matches:[],schedule:[],alarms:[]};
   localStorage.removeItem('frc_room');
@@ -373,7 +373,7 @@ function leaveRoom(){
   document.getElementById('room-screen').style.display='block';
 }
 window.leaveRoom=leaveRoom;
- 
+
 window.addEventListener('load',()=>{
   const r=localStorage.getItem('frc_room'),s=localStorage.getItem('frc_scout');
   MY_TEAM=localStorage.getItem('frc_myteam')||'';
@@ -383,7 +383,7 @@ window.addEventListener('load',()=>{
   setInterval(tickAlarms,20000);tickAlarms();
   if('Notification'in window&&Notification.permission==='default')Notification.requestPermission();
 });
- 
+
 function setSS(state,msg){
   const d=document.getElementById('sync-dot');
   d.className='sync-dot'+(state==='on'?' on':state==='pulse'?' pulse':'');
@@ -411,13 +411,13 @@ window.setPos=setPos;
 function toast(msg,type='ok'){const t=document.getElementById('toast');t.textContent=msg;t.className='show '+type;setTimeout(()=>t.className='',2800);}
 function setMyTeam(){MY_TEAM=getVal('my-team');localStorage.setItem('frc_myteam',MY_TEAM);document.getElementById('my-team-label').textContent=MY_TEAM?'Watching: '+MY_TEAM:'';renderSchedList();renderNextBanner();}
 window.setMyTeam=setMyTeam;
- 
+
 function addAward(){const n=getVal('aw-name');if(!n)return;tempAwards.push({name:n,event:getVal('aw-event')});renderAwardsList();document.getElementById('aw-name').value='';document.getElementById('aw-event').value='';}
 window.addAward=addAward;
 function removeAward(i){tempAwards.splice(i,1);renderAwardsList();}
 window.removeAward=removeAward;
 function renderAwardsList(){const el=document.getElementById('awards-list');if(!el)return;if(!tempAwards.length){el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:4px 0">No awards added</div>';return;}el.innerHTML=tempAwards.map((a,i)=>`<div class="row"><span style="font-weight:600">${a.name}</span><span style="color:var(--text2)">${a.event}</span><button class="del-btn" onclick="removeAward(${i})">×</button></div>`).join('');}
- 
+
 function parseTeams(s){return s.split(',').map(t=>t.trim()).filter(Boolean);}
 function addSchedMatch(){
   const num=getVal('sch-num'),time=getVal('sch-time'),red=parseTeams(getVal('sch-red')),blue=parseTeams(getVal('sch-blue'));
@@ -432,7 +432,7 @@ function addSchedMatch(){
 window.addSchedMatch=addSchedMatch;
 async function saveSchedule(){await pushDB('Schedule');}
 window.saveSchedule=saveSchedule;
- 
+
 function getNextMatch(){const up=DB.schedule.filter(m=>m.status!=='completed');if(!up.length)return null;const now=new Date(),today=now.toDateString();const future=up.filter(m=>m.time&&new Date(today+' '+m.time)>now).sort((a,b)=>new Date(today+' '+a.time)-new Date(today+' '+b.time));return future.length?future[0]:up[0];}
 function teamSnippet(team){
   const pre=DB.pre[team],ms=DB.matches.filter(m=>m.team==team);
@@ -476,7 +476,7 @@ function removeSchedMatch(num){DB.schedule=DB.schedule.filter(m=>m.num!=num);ren
 window.removeSchedMatch=removeSchedMatch;
 function quickLookup(team){document.getElementById('lu-num').value=team;document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.nav-btn').forEach((b,i)=>b.classList.toggle('active',i===3));document.getElementById('tab-lookup').classList.add('active');doLookup();}
 window.quickLookup=quickLookup;
- 
+
 function addAlarm(){
   const matchNum=getVal('al-match'),minStr=getExcl('al-mins');
   if(!matchNum||!minStr){toast('Pick match # and minutes before','err');return;}
@@ -496,14 +496,14 @@ function renderAlarmList(){const el=document.getElementById('alarm-list');if(!el
 function scheduleAlarm(alarm){const mt=new Date(new Date().toDateString()+' '+alarm.time),fireAt=new Date(mt.getTime()-alarm.mins*60000),delay=fireAt-new Date();if(delay<=-1000)return;if(alarmTimers.find(t=>t.key===alarm.key))return;const id=setTimeout(()=>fireAlarm(alarm),Math.max(0,delay));alarmTimers.push({key:alarm.key,id});}
 function fireAlarm(alarm){const a=DB.alarms.find(x=>x.key===alarm.key);if(a)a.fired=true;renderAlarmList();toast(`⏰ Match ${alarm.matchNum} in ${alarm.mins} min!`,'alarm');if('Notification'in window&&Notification.permission==='granted')new Notification('FRC Scout',{body:`Match ${alarm.matchNum} starts in ${alarm.mins} minutes!`});renderNextBanner();}
 function tickAlarms(){DB.alarms.filter(a=>!a.fired).forEach(a=>{if(!alarmTimers.find(t=>t.key===a.key))scheduleAlarm(a);});}
- 
+
 async function savePreMatch(){
   const num=getVal('pr-num');if(!num){toast('Enter team number','err');return;}
   DB.pre[num]={num,name:getVal('pr-name'),rookie:getVal('pr-rookie'),region:getVal('pr-region'),champs:getExcl('pr-champs'),champWin:getExcl('pr-champwin'),awards:[...tempAwards],impact:getExcl('pr-impact'),notes:getVal('pr-notes'),savedBy:SCOUT,savedAt:new Date().toLocaleString()};
   tempAwards=[];renderAwardsList();await pushDB('Team '+num+' pre-match');
 }
 window.savePreMatch=savePreMatch;
- 
+
 async function saveMatch(){
   const team=getVal('ms-team'),match=getVal('ms-match');if(!team||!match){toast('Enter team and match number','err');return;}
   const i=DB.matches.findIndex(m=>m.team==team&&m.match==match);
@@ -516,7 +516,7 @@ async function saveMatch(){
   document.getElementById('ms-strategy').value='';document.getElementById('ms-notes').value='';
 }
 window.saveMatch=saveMatch;
- 
+
 function doLookup(){
   const num=document.getElementById('lu-num').value;if(!num)return;
   const pre=DB.pre[num],ms=DB.matches.filter(m=>m.team==num);
@@ -535,7 +535,7 @@ function doLookup(){
   h+=`</div>`;el.innerHTML=h;
 }
 window.doLookup=doLookup;
- 
+
 function renderDash(){
   const el=document.getElementById('dash-content');
   const teams=[...new Set([...Object.keys(DB.pre),...DB.matches.map(m=>m.team)])];
