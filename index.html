@@ -228,7 +228,7 @@
       <div class="fc" style="margin-bottom:10px">
         <label>What did they do in auto?</label>
         <div class="tg" id="ms-auto-action">
-          <button class="tb" onclick="excl('ms-auto-action',this)">Shot 1 load &amp; hung</button><button class="tb" onclick="excl('ms-auto-action',this)">Shot 1 load</button><button class="tb" onclick="excl('ms-auto-action',this)">Shot 2 loads &amp; hung</button>
+          <button class="tb" onclick="excl('ms-auto-action',this)">Shot 1 load &amp; hung</button><button class="tb" onclick="excl('ms-auto-action',this)">Shot 1 load</button><button class="tb" onclick="excl('ms-auto-action',this)">Shot 2 loads &amp; hung</button><button class="tb" onclick="excl('ms-auto-action',this)">Shot 2 loads</button>
         </div>
       </div>
       <div class="fg">
@@ -437,16 +437,81 @@ async function saveSchedule(){await pushDB('Schedule');}
 window.saveSchedule=saveSchedule;
 
 function getNextMatch(){const up=DB.schedule.filter(m=>m.status!=='completed');if(!up.length)return null;const now=new Date(),today=now.toDateString();const future=up.filter(m=>m.time&&new Date(today+' '+m.time)>now).sort((a,b)=>new Date(today+' '+a.time)-new Date(today+' '+b.time));return future.length?future[0]:up[0];}
-function teamSnippet(team){
-  const pre=DB.pre[team],ms=DB.matches.filter(m=>m.team==team);
-  const hangLvls=ms.map(m=>m.endgame?.hangLvl).filter(x=>x&&x!=='N/A');
+function teamCard(team, alliance){
+  const pre=DB.pre[team], ms=DB.matches.filter(m=>m.team==team);
+  const hangLvls=ms.map(m=>m.endgame?.hangLvl).filter(x=>x&&x!=='None'&&x);
   const mechs=[...new Set(ms.map(m=>m.tele?.shootMech).filter(Boolean))];
+  const intakes=[...new Set(ms.map(m=>m.tele?.intake).filter(Boolean))];
+  const positions=[...new Set(ms.map(m=>m.tele?.positions).filter(Boolean))];
+  const hopper=[...new Set(ms.map(m=>m.tele?.hopper).filter(Boolean))];
+  const autoActions=[...new Set(ms.map(m=>m.auto?.action).filter(Boolean))];
+  const canMove=ms.some(m=>m.tele?.moving==='Yes'||m.tele?.moving==='Sometimes');
+  const defCount=ms.filter(m=>m.tele?.defense&&m.tele.defense!=='No').length;
+  const strategies=ms.map(m=>m.tele?.strategy).filter(Boolean);
+  const preNotes=pre?.notes||'';
   const ic={Low:'bg',Medium:'ba',High:'ba',Powerhouse:'br','':'bb'}[pre?.impact||''];
-  let h=`<span style="font-weight:700">Team ${team}</span>`;
-  if(pre?.name)h+=` <span style="color:var(--text2);font-size:12px">${pre.name}</span>`;
-  if(pre?.impact)h+=` <span class="badge ${ic}" style="font-size:10px">${pre.impact}</span>`;
-  const d=[];if(mechs.length)d.push('Shooter: '+mechs.join('/'));if(hangLvls.length)d.push('Best hang: '+[...hangLvls].pop());if(ms.length)d.push(ms.length+' match'+(ms.length>1?'es':''));if(pre?.awards?.length)d.push(pre.awards.length+' award'+(pre.awards.length>1?'s':''));
-  if(d.length)h+=`<br><span style="font-size:11px;color:var(--text3)">${d.join(' · ')}</span>`;
+  const alColor=alliance==='red'?'#A32D2D':'#185FA5';
+  const alBg=alliance==='red'?'#FCEBEB':'#E6F1FB';
+
+  let h=`<div style="background:var(--bg);border:0.5px solid var(--border);border-radius:var(--r-lg);padding:1rem;margin-bottom:10px;border-left:3px solid ${alColor}">`;
+
+  // Header
+  h+=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px">`;
+  h+=`<div style="display:flex;align-items:center;gap:8px">`;
+  h+=`<span style="font-size:15px;font-weight:700;cursor:pointer;color:${alColor}" onclick="quickLookup(${team})">Team ${team}</span>`;
+  if(pre?.name)h+=`<span style="font-size:13px;color:var(--text2)">${pre.name}</span>`;
+  h+=`</div>`;
+  h+=`<div style="display:flex;gap:4px;flex-wrap:wrap">`;
+  if(pre?.impact)h+=`<span class="badge ${ic}">${pre.impact}</span>`;
+  h+=`<span style="background:${alBg};color:${alColor};font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px">${alliance.toUpperCase()}</span>`;
+  h+=`</div></div>`;
+
+  // No data fallback
+  if(!pre&&!ms.length){h+=`<div style="font-size:12px;color:var(--text3);font-style:italic">No scouting data yet — tap team number to add</div></div>`;return h;}
+
+  // Stats row
+  h+=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">`;
+  if(mechs.length)mechs.forEach(s=>h+=`<span class="badge bb">Shooter: ${s}</span>`);
+  if(intakes.length)intakes.forEach(s=>h+=`<span class="badge bg">Intake: ${s}</span>`);
+  if(hopper.length)h+=`<span class="badge ba">Hopper: ${hopper.join('/')} balls</span>`;
+  if(hangLvls.length)h+=`<span class="badge bg">Best hang: ${[...hangLvls].pop()}</span>`;
+  if(positions.length)positions.forEach(p=>h+=`<span class="badge ba">${p}</span>`);
+  if(canMove)h+=`<span class="badge bp">Shoots moving</span>`;
+  if(defCount)h+=`<span class="badge br">Defense ${defCount}x</span>`;
+  h+=`</div>`;
+
+  // Champs & awards
+  if(pre?.champs||pre?.awards?.length){
+    h+=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">`;
+    if(pre.champs)h+=`<span class="badge ba">Champs: ${pre.champs}${pre.champWin==='Yes'?' · Won':''}</span>`;
+    if(pre.awards?.length)pre.awards.forEach(a=>h+=`<span class="badge ba">★ ${a.name} ${a.event}</span>`);
+    h+=`</div>`;
+  }
+
+  // Auto tendencies
+  if(autoActions.length){
+    h+=`<div style="margin-bottom:8px"><span style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Auto: </span>`;
+    autoActions.forEach(a=>h+=`<span class="badge bb">${a}</span>`);
+    h+=`</div>`;
+  }
+
+  // Match strategies
+  if(strategies.length){
+    h+=`<div style="border-top:0.5px solid var(--border);padding-top:8px;margin-top:4px">`;
+    h+=`<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Strategy notes (${strategies.length} match${strategies.length>1?'es':''})</div>`;
+    strategies.slice(-3).forEach(s=>h+=`<div style="font-size:12px;color:var(--text2);margin-bottom:4px;padding-left:8px;border-left:2px solid var(--border2)">${s}</div>`);
+    h+=`</div>`;
+  }
+
+  // Pre-match notes
+  if(preNotes){
+    h+=`<div style="border-top:0.5px solid var(--border);padding-top:8px;margin-top:4px">`;
+    h+=`<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Pre-match notes</div>`;
+    h+=`<div style="font-size:12px;color:var(--text2)">${preNotes}</div>`;
+    h+=`</div>`;
+  }
+
+  h+=`</div>`;
   return h;
 }
 function renderNextBanner(){
@@ -454,7 +519,8 @@ function renderNextBanner(){
   const next=getNextMatch();if(!next){wrap.innerHTML='';return;}
   const mt=MY_TEAM||localStorage.getItem('frc_myteam')||'';
   let ts='';if(next.time){const d=new Date(new Date().toDateString()+' '+next.time);const mins=Math.round((d-new Date())/60000);ts=mins>0?` · in ${mins} min`:(mins===0?' · now!':(mins>-30?' · just started':''));}
-  wrap.innerHTML=`<div class="next-banner"><div class="sub">Next match</div><div class="title">Match ${next.num}${ts}</div><div class="alliances"><div><div class="al-label">Red alliance</div>${next.red.map(t=>`<span class="team-chip red${t==mt?' us':''}" onclick="quickLookup(${t})">${t}</span>`).join('')}</div><div><div class="al-label">Blue alliance</div>${next.blue.map(t=>`<span class="team-chip blue${t==mt?' us':''}" onclick="quickLookup(${t})">${t}</span>`).join('')}</div></div></div>`;
+  let h=`<div class="next-banner"><div class="sub">Next match</div><div class="title">Match ${next.num}${ts}</div><div class="alliances"><div><div class="al-label">Red alliance</div>${next.red.map(t=>`<span class="team-chip red${t==mt?' us':''}" onclick="quickLookup(${t})">${t}</span>`).join('')}</div><div><div class="al-label">Blue alliance</div>${next.blue.map(t=>`<span class="team-chip blue${t==mt?' us':''}" onclick="quickLookup(${t})">${t}</span>`).join('')}</div></div></div>`;
+  wrap.innerHTML=h;
 }
 function renderSchedList(){
   const el=document.getElementById('sched-list');if(!el)return;
@@ -463,12 +529,43 @@ function renderSchedList(){
   let html='';
   DB.schedule.forEach(m=>{
     const isNext=next&&next.num===m.num,done=m.status==='completed',mine=mt&&(m.red.includes(mt)||m.blue.includes(mt));
+    const myAlliance=m.red.includes(mt)?'red':m.blue.includes(mt)?'blue':'';
+    const opponents=myAlliance==='red'?m.blue:myAlliance==='blue'?m.red:[];
+    const allies=myAlliance==='red'?m.red.filter(t=>t!=mt):myAlliance==='blue'?m.blue.filter(t=>t!=mt):[];
     html+=`<div class="sched-match${isNext?' next-up':''}${done?' completed':''}">`;
-    html+=`<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:8px"><div style="display:flex;align-items:center;gap:6px"><span style="font-weight:700">Match ${m.num}</span>${isNext?'<span class="badge bb">Next up</span>':''}${mine?'<span class="badge bg">Your match</span>':''}</div>`;
-    html+=`<div style="display:flex;align-items:center;gap:8px">${m.time?`<span style="font-size:12px;color:var(--text2)">${m.time}</span>`:''}<select onchange="updateMatchStatus(${m.num},this.value)" style="font-size:12px;padding:3px 6px;width:auto"><option value="upcoming"${!done?' selected':''}>Upcoming</option><option value="completed"${done?' selected':''}>Completed</option></select><button class="del-btn" onclick="removeSchedMatch(${m.num})">×</button></div></div>`;
+    // Header
+    html+=`<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:10px">`;
+    html+=`<div style="display:flex;align-items:center;gap:6px"><span style="font-weight:700;font-size:15px">Match ${m.num}</span>`;
+    if(isNext)html+=`<span class="badge bb">Next up</span>`;
+    if(mine)html+=`<span class="badge bg">Your match</span>`;
+    html+=`</div>`;
+    html+=`<div style="display:flex;align-items:center;gap:8px">`;
+    if(m.time)html+=`<span style="font-size:12px;color:var(--text2)">${m.time}</span>`;
+    html+=`<select onchange="updateMatchStatus(${m.num},this.value)" style="font-size:12px;padding:3px 6px;width:auto"><option value="upcoming"${!done?' selected':''}>Upcoming</option><option value="completed"${done?' selected':''}>Completed</option></select>`;
+    html+=`<button class="del-btn" onclick="removeSchedMatch(${m.num})">×</button>`;
+    html+=`</div></div>`;
+    // Alliance chips
     html+=`<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px"><span style="font-size:11px;color:#A32D2D;font-weight:700;min-width:32px">RED</span>${m.red.map(t=>`<span class="team-chip red${t==mt?' us':''}" onclick="quickLookup(${t})">${t}</span>`).join('')}</div>`;
-    html+=`<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span style="font-size:11px;color:#185FA5;font-weight:700;min-width:32px">BLUE</span>${m.blue.map(t=>`<span class="team-chip blue${t==mt?' us':''}" onclick="quickLookup(${t})">${t}</span>`).join('')}</div>`;
-    if(isNext){const others=[...m.red,...m.blue].filter(t=>t!=mt),withData=others.filter(t=>DB.pre[t]||DB.matches.some(x=>x.team==t));if(withData.length){html+=`<div style="margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border)"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Team intel</div>`;withData.forEach(t=>{html+=`<div class="preview-card">${teamSnippet(t)}</div>`;});html+=`</div>`;}}
+    html+=`<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px"><span style="font-size:11px;color:#185FA5;font-weight:700;min-width:32px">BLUE</span>${m.blue.map(t=>`<span class="team-chip blue${t==mt?' us':''}" onclick="quickLookup(${t})">${t}</span>`).join('')}</div>`;
+    // Full intel for upcoming matches (not completed)
+    if(!done&&mt){
+      if(allies.length){
+        html+=`<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Your alliance</div>`;
+        allies.forEach(t=>{html+=teamCard(t,myAlliance);});
+      }
+      if(opponents.length){
+        html+=`<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:10px 0 8px">Opposing alliance</div>`;
+        opponents.forEach(t=>{html+=teamCard(t,myAlliance==='red'?'blue':'red');});
+      }
+    } else if(!done&&!mt){
+      // No team set — show all teams
+      const allT=[...m.red,...m.blue];
+      if(allT.length){
+        html+=`<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">All teams</div>`;
+        m.red.forEach(t=>{html+=teamCard(t,'red');});
+        m.blue.forEach(t=>{html+=teamCard(t,'blue');});
+      }
+    }
     html+=`</div>`;
   });
   el.innerHTML=html;
@@ -525,16 +622,98 @@ function doLookup(){
   const pre=DB.pre[num],ms=DB.matches.filter(m=>m.team==num);
   const el=document.getElementById('lu-result');
   if(!pre&&!ms.length){el.innerHTML=`<div class="card" style="text-align:center;padding:2rem;color:var(--text2)">No data for team ${num}.<br><small style="font-size:12px;display:block;margin-top:6px">Scout them first.</small></div>`;return;}
-  const hangLvls=ms.map(m=>m.endgame?.hangLvl).filter(x=>x&&x!=='N/A'),bestHang=hangLvls.length?[...hangLvls].pop():'—';
-  const autoActions=[...new Set(ms.flatMap(m=>m.auto?.actions||[]))],mechs=[...new Set(ms.map(m=>m.tele?.shootMech).filter(Boolean))],intakes=[...new Set(ms.map(m=>m.tele?.intake).filter(Boolean))];
-  const canMove=ms.some(m=>m.tele?.moving==='Yes'||m.tele?.moving==='Sometimes'),pos=[...new Set(ms.map(m=>m.tele?.positions).filter(Boolean))];
-  const defCount=ms.filter(m=>m.tele?.defense&&m.tele.defense!=='No').length,bumpCount=ms.filter(m=>m.auto?.bump==='Yes').length;
-  const ic={Low:'bg',Medium:'ba',High:'ba',Powerhouse:'br'}[pre?.impact]||'bb',scouts=[...new Set(ms.map(m=>m.savedBy).filter(Boolean))];
-  let h=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem"><div><div style="font-size:22px;font-weight:800">Team ${num}</div><div style="font-size:14px;color:var(--text2)">${pre?.name||'Unknown'}${pre?.region?' · '+pre.region:''}${pre?.rookie?' · Est. '+pre.rookie:''}</div></div>${pre?.impact?`<span class="badge ${ic}" style="font-size:13px;padding:4px 14px">${pre.impact}</span>`:''}</div>`;
-  h+=`<div class="stat-grid"><div class="stat-card"><div class="stat-label">Matches scouted</div><div class="stat-val">${ms.length}</div></div><div class="stat-card"><div class="stat-label">Best hang</div><div class="stat-val" style="font-size:16px">${bestHang}</div></div><div class="stat-card"><div class="stat-label">Champs</div><div class="stat-val" style="font-size:13px">${pre?.champs||'—'}${pre?.champWin==='Yes'?' · Won':''}</div></div></div>`;
-  if(pre?.awards?.length){h+=`<div class="sec">Awards</div>`;h+=pre.awards.map(a=>`<div class="award-item"><span class="badge ba">★</span><div><div style="font-size:13px;font-weight:600">${a.name}</div><div style="font-size:12px;color:var(--text2)">${a.event}</div></div></div>`).join('');}
-  if(ms.length){h+=`<div class="sec" style="margin-top:1.25rem">Robot profile</div><div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px">`;mechs.forEach(s=>h+=`<span class="badge bb">Shooter: ${s}</span>`);intakes.forEach(s=>h+=`<span class="badge bg">Intake: ${s}</span>`);pos.forEach(s=>h+=`<span class="badge ba">${s}</span>`);if(canMove)h+=`<span class="badge bp">Shoots while moving</span>`;[...new Set(ms.map(m=>m.tele?.balls).filter(Boolean))].forEach(b=>h+=`<span class="badge bb">${b} ball(s)/shot</span>`);if(bumpCount)h+=`<span class="badge ba">Crossed bump ${bumpCount}×</span>`;if(defCount)h+=`<span class="badge br">Defense ${defCount}/${ms.length}</span>`;h+=`</div>`;h+=`<div class="sec">Auto tendencies</div>`;if(autoActions.length)h+=`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px">`+autoActions.map(a=>`<span class="badge bb">${a}</span>`).join('')+`</div>`;const sp=[...new Set(ms.map(m=>m.auto?.startPos).filter(Boolean))];if(sp.length)h+=`<div style="font-size:12px;color:var(--text2)">Starts from: `+sp.map(p=>`<strong>${p}</strong>`).join(', ')+`</div>`;h+=`<div class="sec" style="margin-top:1.25rem">Match history</div>`;ms.slice(-6).reverse().forEach(m=>{h+=`<div class="row"><span style="font-weight:700;min-width:36px">M${m.match}</span><span class="badge ${m.alliance==='red'?'br':'bb'}">${m.alliance}</span><span style="color:var(--text2);font-size:12px">${m.auto?.startPos||'?'} start</span><span style="font-size:12px">${m.endgame?.action||'—'}${m.endgame?.hangLvl&&m.endgame.hangLvl!=='N/A'?' · '+m.endgame.hangLvl:''}</span>${m.savedBy?`<span style="font-size:11px;color:var(--text3)">${m.savedBy}</span>`:''}</div>`;if(m.tele?.strategy)h+=`<div style="font-size:12px;color:var(--text2);padding:3px 0 6px;border-bottom:0.5px solid var(--border)">${m.tele.strategy}</div>`;});if(scouts.length)h+=`<div style="font-size:12px;color:var(--text3);margin-top:8px">Scouted by: ${scouts.join(', ')}</div>`;}
-  if(pre?.notes)h+=`<div class="sec" style="margin-top:1.25rem">Scout notes</div><div style="font-size:13px;color:var(--text2);line-height:1.6">${pre.notes}</div>`;
+
+  // Fixed: use 'None' not 'N/A' for hang filter, use action (singular) not actions
+  const hangLvls=ms.map(m=>m.endgame?.hangLvl).filter(x=>x&&x!=='None'&&x!=='N/A');
+  const bestHang=hangLvls.length?[...hangLvls].pop():'—';
+  const autoActions=[...new Set(ms.map(m=>m.auto?.action).filter(Boolean))];
+  const mechs=[...new Set(ms.map(m=>m.tele?.shootMech).filter(Boolean))];
+  const intakes=[...new Set(ms.map(m=>m.tele?.intake).filter(Boolean))];
+  const hoppers=[...new Set(ms.map(m=>m.tele?.hopper).filter(Boolean))];
+  const balls=[...new Set(ms.map(m=>m.tele?.balls).filter(Boolean))];
+  const canMove=ms.some(m=>m.tele?.moving==='Yes'||m.tele?.moving==='Sometimes');
+  const movingVals=[...new Set(ms.map(m=>m.tele?.moving).filter(Boolean))];
+  const pos=[...new Set(ms.map(m=>m.tele?.positions).filter(Boolean))];
+  const bumpCount=ms.filter(m=>m.auto?.bump==='Yes').length;
+  // Fixed: show actual defense values (Some/Heavy) not just count
+  const defMatches=ms.map(m=>m.tele?.defense).filter(x=>x&&x!=='No');
+  const defTypes=[...new Set(defMatches)];
+  const scouts=[...new Set(ms.map(m=>m.savedBy).filter(Boolean))];
+  const ic={Low:'bg',Medium:'ba',High:'ba',Powerhouse:'br'}[pre?.impact]||'bb';
+
+  let h=`<div class="card">`;
+  // Header
+  h+=`<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem">`;
+  h+=`<div><div style="font-size:22px;font-weight:800">Team ${num}</div>`;
+  h+=`<div style="font-size:14px;color:var(--text2)">${pre?.name||'Unknown'}${pre?.region?' · '+pre.region:''}${pre?.rookie?' · Est. '+pre.rookie:''}</div></div>`;
+  if(pre?.impact)h+=`<span class="badge ${ic}" style="font-size:13px;padding:4px 14px">${pre.impact}</span>`;
+  h+=`</div>`;
+
+  // Stat cards
+  h+=`<div class="stat-grid">`;
+  h+=`<div class="stat-card"><div class="stat-label">Matches scouted</div><div class="stat-val">${ms.length}</div></div>`;
+  h+=`<div class="stat-card"><div class="stat-label">Best hang</div><div class="stat-val" style="font-size:16px">${bestHang}</div></div>`;
+  h+=`<div class="stat-card"><div class="stat-label">Champs</div><div class="stat-val" style="font-size:13px">${pre?.champs||'—'}${pre?.champWin==='Yes'?' · Won':''}</div></div>`;
+  h+=`</div>`;
+
+  // Awards
+  if(pre?.awards?.length){
+    h+=`<div class="sec">Awards</div>`;
+    h+=pre.awards.map(a=>`<div class="award-item"><span class="badge ba">★</span><div><div style="font-size:13px;font-weight:600">${a.name}</div><div style="font-size:12px;color:var(--text2)">${a.event}</div></div></div>`).join('');
+  }
+
+  if(ms.length){
+    // Robot profile badges — all properly labeled
+    h+=`<div class="sec" style="margin-top:1.25rem">Robot profile</div>`;
+    h+=`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px">`;
+    if(mechs.length) mechs.forEach(s=>h+=`<span class="badge bb">Shooter: ${s}</span>`);
+    if(intakes.length) intakes.forEach(s=>h+=`<span class="badge bg">Intake: ${s}</span>`);
+    if(hoppers.length) h+=`<span class="badge ba">Hopper: ${hoppers.join('/')} balls</span>`;
+    if(balls.length) balls.forEach(b=>h+=`<span class="badge bb">${b} ball(s)/shot</span>`);
+    if(movingVals.length) h+=`<span class="badge bp">Moving shot: ${movingVals.join('/')}</span>`;
+    if(pos.length) pos.forEach(p=>h+=`<span class="badge ba">${p}</span>`);
+    if(bumpCount) h+=`<span class="badge ba">Crossed bump ${bumpCount}/${ms.length} matches</span>`;
+    // Fixed defense: show "Defense: Some, Heavy" not "1/1"
+    if(defTypes.length) h+=`<span class="badge br">Defense: ${defTypes.join(', ')} (${defMatches.length}/${ms.length} matches)</span>`;
+    h+=`</div>`;
+
+    // Auto tendencies
+    h+=`<div class="sec">Auto tendencies</div>`;
+    if(autoActions.length){
+      h+=`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px">`;
+      autoActions.forEach(a=>h+=`<span class="badge bb">${a}</span>`);
+      h+=`</div>`;
+    } else {
+      h+=`<div style="font-size:12px;color:var(--text3);margin-bottom:6px">No auto data recorded</div>`;
+    }
+    const sp=[...new Set(ms.map(m=>m.auto?.startPos).filter(Boolean))];
+    if(sp.length) h+=`<div style="font-size:12px;color:var(--text2);margin-bottom:6px">Starts from: `+sp.map(p=>`<strong>${p}</strong>`).join(', ')+`</div>`;
+
+    // Match history — fixed hang filter None vs N/A
+    h+=`<div class="sec" style="margin-top:1.25rem">Match history</div>`;
+    ms.slice(-6).reverse().forEach(m=>{
+      const hangVal=m.endgame?.hangLvl&&m.endgame.hangLvl!=='None'&&m.endgame.hangLvl!=='N/A'?` · Hang ${m.endgame.hangLvl}`:'';
+      const autoVal=m.auto?.action||'—';
+      h+=`<div class="row">`;
+      h+=`<span style="font-weight:700;min-width:36px">M${m.match}</span>`;
+      h+=`<span class="badge ${m.alliance==='red'?'br':'bb'}">${m.alliance}</span>`;
+      h+=`<span style="color:var(--text2);font-size:12px">${m.auto?.startPos||'?'} start · ${autoVal}</span>`;
+      h+=`<span style="font-size:12px">${m.endgame?.action||'—'}${hangVal}</span>`;
+      if(m.tele?.defense&&m.tele.defense!=='No') h+=`<span class="badge br">${m.tele.defense}</span>`;
+      if(m.savedBy) h+=`<span style="font-size:11px;color:var(--text3)">${m.savedBy}</span>`;
+      h+=`</div>`;
+      if(m.tele?.strategy) h+=`<div style="font-size:12px;color:var(--text2);padding:3px 0 6px;border-bottom:0.5px solid var(--border)">${m.tele.strategy}</div>`;
+    });
+    if(scouts.length) h+=`<div style="font-size:12px;color:var(--text3);margin-top:8px">Scouted by: ${scouts.join(', ')}</div>`;
+  }
+
+  // Pre-match notes
+  if(pre?.notes){
+    h+=`<div class="sec" style="margin-top:1.25rem">Scout notes</div>`;
+    h+=`<div style="font-size:13px;color:var(--text2);line-height:1.6">${pre.notes}</div>`;
+    if(pre.savedBy) h+=`<div style="font-size:11px;color:var(--text3);margin-top:6px">By ${pre.savedBy} · ${pre.savedAt}</div>`;
+  }
+
   h+=`</div>`;el.innerHTML=h;
 }
 window.doLookup=doLookup;
